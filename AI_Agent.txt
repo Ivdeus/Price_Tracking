@@ -1,0 +1,3 @@
+pip install requests streamlit pandas plotly
+python scraper.py          # crea/actualiza precios_exito.db con el snapshot de hoy
+streamlit run dashboard.py # abre el dashboard en el navegador
