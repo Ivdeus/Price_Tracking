@@ -5,7 +5,6 @@ Created on Sun Aug 16 13:09:50 2026
 @author: ivdeu
 """
 ### Tracker de precios - Éxito (Refrigeración) ###
-
 """
 Tracker de precios - Éxito (Refrigeración)
 --------------------------------------------
@@ -137,8 +136,8 @@ def parsear_producto(producto: dict, categoria_nombre: str) -> list[dict]:
         precio_lista = oferta.get("ListPrice")
         disponible = oferta.get("AvailableQuantity", 0)
 
-        if precio is None:
-            continue  # sin oferta activa, se ignora
+        if precio is None or precio <= 0:
+            continue  # sin oferta activa (sin stock), se ignora
 
         filas.append({
             "fecha": hoy,
