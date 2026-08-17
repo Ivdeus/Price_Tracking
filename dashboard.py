@@ -4,7 +4,6 @@ Created on Sun Aug 16 13:13:38 2026
 
 @author: ivdeu
 """
-
 """
 Dashboard de precios - Éxito (Refrigeración)
 ----------------------------------------------
@@ -98,14 +97,16 @@ if df_filtrado.empty:
     st.stop()
 
 df_filtrado["etiqueta"] = df_filtrado["producto"] + " (" + df_filtrado["sku_id"].astype(str) + ")"
+df_filtrado["fecha_str"] = df_filtrado["fecha"].dt.strftime("%Y-%m-%d")
 
 fig = px.line(
     df_filtrado.sort_values("fecha"),
-    x="fecha", y="precio", color="etiqueta",
+    x="fecha_str", y="precio", color="etiqueta",
     markers=True,
-    labels={"fecha": "Fecha", "precio": "Precio (COP)", "etiqueta": "Producto"},
+    labels={"fecha_str": "Fecha", "precio": "Precio (COP)", "etiqueta": "Producto"},
     title="Evolución de precio por SKU",
 )
+fig.update_xaxes(type="category")
 st.plotly_chart(fig, use_container_width=True)
 
 # ---------------- TABLA DEL ÚLTIMO SNAPSHOT ----------------
