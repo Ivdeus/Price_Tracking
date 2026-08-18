@@ -1,7 +1,7 @@
 # Guarda este archivo como .github/workflows/price_tracker.yml en tu repo de GitHub.
 # GitHub Actions es gratis para repos públicos (y con minutos gratis en privados).
 
-name: Tracker diario de precios Éxito
+name: Tracker diario de precios
 
 on:
   schedule:
