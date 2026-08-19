@@ -13,7 +13,7 @@ import json
 import sqlite3
 from datetime import date, datetime
 
-from normalizacion import generar_producto_normalizado, sugerir_posibles_duplicados
+from normalizacion import generar_producto_normalizado, fusionar_por_referencia, sugerir_posibles_duplicados
 from retailers import exito, jumbo, alkosto, falabella
 
 DB_PATH = "precios_multitienda.db"
@@ -51,14 +51,25 @@ def init_db(conn: sqlite3.Connection) -> None:
 def guardar_snapshot(conn: sqlite3.Connection, filas: list[dict]) -> int:
     cur = conn.cursor()
     hoy = date.today().isoformat()
-    insertados = 0
 
+    # Paso 1: normalizar cada fila (marca, tipo, capacidad, referencia, canonical_id inicial)
+    filas_normalizadas = []
     for f in filas:
         norm = generar_producto_normalizado(
             nombre_producto=f["producto"],
             marca_declarada=f.get("marca", ""),
             categoria=f.get("categoria", ""),
         )
+        filas_normalizadas.append({**f, **norm})
+
+    # Paso 2: fusionar canonical_ids que comparten referencia/modelo, aunque
+    # hayan nacido con llaves distintas (ver normalizacion.py)
+    mapeo_fusion = fusionar_por_referencia(filas_normalizadas)
+    for f in filas_normalizadas:
+        f["canonical_id"] = mapeo_fusion[f["canonical_id"]]
+
+    insertados = 0
+    for f in filas_normalizadas:
         try:
             cur.execute("""
                 INSERT OR REPLACE INTO price_history
@@ -71,8 +82,8 @@ def guardar_snapshot(conn: sqlite3.Connection, filas: list[dict]) -> int:
                 f.get("marca"), f.get("categoria"), f["precio"], f.get("precio_lista"),
                 f.get("disponible"), f.get("url"),
                 json.dumps(f.get("especificaciones", {}), ensure_ascii=False),
-                norm["canonical_id"], norm["marca_normalizada"], norm["tipo_producto"],
-                norm["capacidad_litros"], int(norm["confianza_alta"]),
+                f["canonical_id"], f["marca_normalizada"], f["tipo_producto"],
+                f["capacidad_litros"], int(f["confianza_alta"]),
             ))
             insertados += 1
         except sqlite3.Error as e:
