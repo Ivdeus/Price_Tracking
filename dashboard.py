@@ -60,9 +60,29 @@ tipos = sorted(df_r["tipo_producto"].dropna().unique())
 tipo_sel = st.sidebar.multiselect("Tipo de producto", tipos, default=tipos)
 df_t = df_r[df_r["tipo_producto"].isin(tipo_sel)]
 
-marcas = sorted(df_t["marca_normalizada"].dropna().unique())
+# Filtro de capacidad (litros) — solo aplica sobre filas que sí tienen capacidad detectada
+capacidades = df_t["capacidad_litros"].dropna()
+if not capacidades.empty:
+    cap_min, cap_max = int(capacidades.min()), int(capacidades.max())
+    if cap_min == cap_max:
+        # Un solo valor de capacidad en todo el dataset: no tiene sentido un slider
+        df_cap = df_t
+    else:
+        rango_sel = st.sidebar.slider(
+            "Capacidad (litros)",
+            min_value=cap_min, max_value=cap_max, value=(cap_min, cap_max),
+            help="Los productos sin capacidad detectada (confianza_alta=0) "
+                 "quedan incluidos siempre, ya que no tienen este dato.",
+        )
+        sin_capacidad = df_t["capacidad_litros"].isna()
+        en_rango = df_t["capacidad_litros"].between(rango_sel[0], rango_sel[1])
+        df_cap = df_t[sin_capacidad | en_rango]
+else:
+    df_cap = df_t
+
+marcas = sorted(df_cap["marca_normalizada"].dropna().unique())
 marca_sel = st.sidebar.multiselect("Marca", marcas, default=marcas)
-df_m = df_t[df_t["marca_normalizada"].isin(marca_sel)]
+df_m = df_cap[df_cap["marca_normalizada"].isin(marca_sel)]
 
 solo_alta_confianza = st.sidebar.checkbox(
     "Solo matches de alta confianza",
