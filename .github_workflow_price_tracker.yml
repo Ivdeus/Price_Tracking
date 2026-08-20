@@ -1,29 +1,26 @@
-# Guarda este archivo como .github/workflows/price_tracker.yml en tu repo de GitHub.
-# GitHub Actions es gratis para repos públicos (y con minutos gratis en privados).
- 
 name: Tracker diario de precios (multi-tienda)
- 
+
 on:
   schedule:
-    - cron: "0 11 * * *"   # 6:00 am hora Colombia (UTC-5) todos los días
-  workflow_dispatch: {}    # te deja correrlo manualmente desde GitHub también
- 
+    - cron: "0 11 * * *"
+  workflow_dispatch: {}
+
 jobs:
   scrape:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
- 
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
- 
+
       - name: Instalar dependencias
         run: pip install -r requirements.txt
- 
+
       - name: Correr scrapers
         run: python run_all.py
- 
+
       - name: Commitear base de datos actualizada
         run: |
           git config user.name "price-tracker-bot"
@@ -31,4 +28,3 @@ jobs:
           git add precios_multitienda.db revisar_posibles_duplicados.csv
           git commit -m "Snapshot de precios $(date +'%Y-%m-%d')" || echo "Sin cambios"
           git push
- 
